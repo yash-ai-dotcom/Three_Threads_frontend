@@ -1,5 +1,6 @@
 import './App.css';
 import Inventory from './Inventory';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (
