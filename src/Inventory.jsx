@@ -175,7 +175,7 @@ function Inventory() {
                 <th>Article No</th>
                 <th>Brand</th>
                 <th>Category</th>
-                <th>Set Total</th>   
+                <th>Total Set</th>   
                 <th>Size In Set</th>
                 <th>Total Qty</th>
                 <th>Cost/Piece</th>
