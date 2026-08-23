@@ -113,7 +113,7 @@ function Inventory() {
             {/* Pricing & Image Row */}
             <div className="row g-3 mb-4">
               <div className="col-md-3">
-                <label className="form-label fw-semibold">Sets Total</label>
+                <label className="form-label fw-semibold">Total Sets</label>
                 <input type="number" className="form-control" name="setTotal" value={formData.setTotal} onChange={handleInputChange} />
               </div>
               <div className="col-md-3">
@@ -175,8 +175,12 @@ function Inventory() {
                 <th>Article No</th>
                 <th>Brand</th>
                 <th>Category</th>
+                <th>Set Total</th>   
+                <th>Size In Set</th>
                 <th>Total Qty</th>
+                <th>Cost/Piece</th>
                 <th>Total Cost</th>
+                <th>Selling Price/Piece</th>
                 <th>Selling Cost</th>
                 <th>Profit Margin</th>
                 <th className="text-center">Actions</th>
@@ -185,7 +189,7 @@ function Inventory() {
             <tbody>
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="text-center py-4 text-muted">No inventory items found. Add one above!</td>
+                  <td colSpan="14" className="text-center py-4 text-muted">No inventory items found. Add one above!</td>
                 </tr>
               ) : (
                 items.map((item) => (
@@ -201,8 +205,12 @@ function Inventory() {
                     <td><span className="badge bg-light text-dark border">{item.articleNo}</span></td>
                     <td>{item.brand}</td>
                     <td>{item.category}</td>
+                    <td>{item.setTotal}</td>
+                    <td>{item.sizeInSet}</td>
                     <td className="fw-semibold">{item.grandTotal}</td>
+                    <td>₹{item.costPerPiece}</td>
                     <td>₹{item.totalCost}</td>
+                    <td>₹{item.sellingCostPerPiece}</td>
                     <td>₹{item.sellingTotalCost}</td>
                     <td>
                       <span className={`fw-bold ${item.profitMargin >= 0 ? 'text-success' : 'text-danger'}`}>
