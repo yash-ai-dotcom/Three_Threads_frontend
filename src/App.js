@@ -5,53 +5,51 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import OwnerNavbar from './OwnerNavbar';
 import AdminNavbar from './AdminNavbar';
-import Inventory from './Inventory'; // Existing Inventory component[cite: 1]
+import Inventory from './Inventory';
 
 // Placeholder components
 const Dashboard = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">Profit & Loss Overview</h2>
+    <h2 className="text-secondary fw-bold">📊 Profit & Loss Overview</h2>
     <p className="text-muted">High-level financial overview and revenue metrics.</p>
   </div>
 );
 
 const Expenses = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">Expense Tracker</h2>
-    <p className="text-muted">Log and track daily shop operational expenses (rent, bills, logistics).</p>
+    <h2 className="text-secondary fw-bold">💸 Expense Tracker</h2>
+    <p className="text-muted">Log and track daily shop operational expenses.</p>
   </div>
 );
 
 const Customers = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">Customer Details & Tracking</h2>
+    <h2 className="text-secondary fw-bold">👥 Customer Details & Tracking</h2>
     <p className="text-muted">Manage buyer records, contact info, and transaction histories.</p>
   </div>
 );
 
 const Orders = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">Orders Details & Order Management</h2>
+    <h2 className="text-secondary fw-bold">🛒 Orders Details & Order Management</h2>
     <p className="text-muted">Process store sales orders, dispatch statuses, and receipts.</p>
   </div>
 );
 
 const Employees = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">Employee Management</h2>
+    <h2 className="text-secondary fw-bold">👔 Employee Management</h2>
     <p className="text-muted">Manage staff records, roles, and attendance.</p>
   </div>
 );
 
 function App() {
-  // Change role to 'OWNER' or 'ADMIN' to test different navbar views
   const [userRole, setUserRole] = useState('ADMIN');
 
   const handleLogout = () => {
     setUserRole(null);
   };
 
-  // Temporary role toggle banner for testing UI switching
   return (
     <Router>
       <div>
@@ -69,7 +67,11 @@ function App() {
         {/* --- ROUTE CONFIGURATION --- */}
         <Routes>
           <Route path="/" element={<Navigate to="/inventory" replace />} />
-          <Route path="/inventory" element={<Inventory />} />
+          
+          {/* SEPARATED INVENTORY ROUTES */}
+          <Route path="/add-inventory" element={<Inventory viewMode="FORM_ONLY" />} />
+          <Route path="/inventory" element={<Inventory viewMode="TABLE_ONLY" />} />
+          
           <Route path="/customers" element={<Customers />} />
           <Route path="/orders" element={<Orders />} />
 
