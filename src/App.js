@@ -1,5 +1,6 @@
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import OwnerNavbar from './OwnerNavbar';
 import Inventory from './Inventory'; // Existing Inventory component[cite: 1]
