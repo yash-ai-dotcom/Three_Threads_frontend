@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import API from './api'; // Use centralized API instance targeting Render
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
@@ -25,7 +25,7 @@ function Employees() {
 
   const fetchEmployees = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/api/employees');
+      const res = await API.get('/api/employees');
       setEmployees(res.data);
     } catch (err) {
       console.error('Error fetching employees', err);
@@ -35,7 +35,6 @@ function Employees() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Calculate Age automatically when DOB changes
     if (name === 'dob' && value) {
       const birthDate = new Date(value);
       const ageDifMs = Date.now() - birthDate.getTime();
@@ -52,7 +51,7 @@ function Employees() {
     setMessage({ type: '', text: '' });
 
     try {
-      await axios.post('http://localhost:8080/api/employees', formData);
+      await API.post('/api/employees', formData);
       setMessage({ type: 'success', text: 'Employee Onboarded Successfully!' });
       fetchEmployees();
       
@@ -84,7 +83,6 @@ function Employees() {
         </div>
         <div className="card-body">
           <form onSubmit={handleSubmit}>
-            {/* Section 1: Security & Account */}
             <h6 className="text-primary border-bottom pb-2 mb-3">1. Login & System Access</h6>
             <div className="row g-3 mb-3">
               <div className="col-md-4">
@@ -104,7 +102,6 @@ function Employees() {
               </div>
             </div>
 
-            {/* Section 2: Personal Details */}
             <h6 className="text-primary border-bottom pb-2 mb-3">2. Personal Identification</h6>
             <div className="row g-3 mb-3">
               <div className="col-md-4">
@@ -125,7 +122,6 @@ function Employees() {
               </div>
             </div>
 
-            {/* Section 3: Contact & Address */}
             <h6 className="text-primary border-bottom pb-2 mb-3">3. Contact & Address Info</h6>
             <div className="row g-3 mb-3">
               <div className="col-md-4">
