@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API from '../api'; // Ensure correct path to your axios instance
 
 function Login({ onLogin }) {
-  const [credentials, setCredentials] = useState({ username: '', password: '' });
+  const [credentials, setCredentials] = useState({ username: '', pin: '' });
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -15,19 +16,26 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      // API call to Spring Boot Login Endpoint
-      // const response = await loginApi(credentials);
-      // const { token, role } = response.data;
-      
-      // Mock logic for client testing
-      let detectedRole = null;
-      if (credentials.username === 'owner') detectedRole = 'OWNER';
-      else detectedRole = 'ADMIN';
+      // Call backend Spring Boot auth endpoint
+      const response = await API.post('/api/auth/login', {
+        username: credentials.username,
+        pin: credentials.pin
+      });
 
-      onLogin(detectedRole);
-      navigate(detectedRole === 'OWNER' ? '/dashboard' : '/inventory');
+      const { role } = response.data;
+
+      if (onLogin) {
+        onLogin(role);
+      }
+
+      // Navigate based on assigned role
+      if (role === 'OWNER') {
+        navigate('/dashboard');
+      } else {
+        navigate('/inventory');
+      }
     } catch (err) {
-      setError('Invalid username or password');
+      setError(err.response?.data || 'Invalid username or password/PIN');
     }
   };
 
@@ -55,12 +63,12 @@ function Login({ onLogin }) {
           </div>
 
           <div className="mb-4">
-            <label className="form-label fw-semibold">Password</label>
+            <label className="form-label fw-semibold">Password / PIN</label>
             <input
               type="password"
-              name="password"
+              name="pin"
               className="form-control"
-              value={credentials.password}
+              value={credentials.pin}
               onChange={handleChange}
               required
             />
