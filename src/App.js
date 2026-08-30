@@ -8,8 +8,9 @@ import AdminNavbar from './AdminNavbar';
 import Inventory from './Inventory';
 import Home from './Home';
 import ProtectedRoute from './ProtectedRoute';
+import Employees from './Employees'; // Imported your full Employees component here
 
-// Placeholder components
+// Remaining placeholder components
 const Dashboard = () => (
   <div className="container py-4">
     <h2 className="text-secondary fw-bold">📊 Profit & Loss Overview</h2>
@@ -35,13 +36,6 @@ const Orders = () => (
   <div className="container py-4">
     <h2 className="text-secondary fw-bold">🛒 Orders Details & Order Management</h2>
     <p className="text-muted">Process store sales orders, dispatch statuses, and receipts.</p>
-  </div>
-);
-
-const Employees = () => (
-  <div className="container py-4">
-    <h2 className="text-secondary fw-bold">👔 Employee Management</h2>
-    <p className="text-muted">Manage staff records, roles, and attendance.</p>
   </div>
 );
 
