@@ -6,6 +6,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import OwnerNavbar from './OwnerNavbar';
 import AdminNavbar from './AdminNavbar';
 import Inventory from './Inventory';
+import Home from './Home';
+import ProtectedRoute from './ProtectedRoute';
 
 // Placeholder components
 const Dashboard = () => (
@@ -44,7 +46,11 @@ const Employees = () => (
 );
 
 function App() {
-  const [userRole, setUserRole] = useState('ADMIN');
+  const [userRole, setUserRole] = useState(null); // Starts as unauthenticated (null)
+
+  const handleLogin = (role) => {
+    setUserRole(role);
+  };
 
   const handleLogout = () => {
     setUserRole(null);
@@ -57,38 +63,81 @@ function App() {
         <div className="bg-light border-bottom py-2 text-center">
           <span className="me-2 text-muted small">Current Role: <strong>{userRole || 'Logged Out'}</strong></span>
           <button className="btn btn-sm btn-outline-dark me-2" onClick={() => setUserRole('OWNER')}>Switch to Owner View</button>
-          <button className="btn btn-sm btn-outline-secondary" onClick={() => setUserRole('ADMIN')}>Switch to Admin View</button>
+          <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => setUserRole('ADMIN')}>Switch to Admin View</button>
+          {userRole && <button className="btn btn-sm btn-danger" onClick={handleLogout}>Log Out</button>}
         </div>
 
         {/* --- DYNAMIC NAVBAR RENDERING --- */}
         {userRole === 'OWNER' && <OwnerNavbar onLogout={handleLogout} />}
         {userRole === 'ADMIN' && <AdminNavbar onLogout={handleLogout} />}
 
-        {/* --- ROUTE CONFIGURATION --- */}
+        {/* --- PROTECTED ROUTE CONFIGURATION --- */}
         <Routes>
-          <Route path="/" element={<Navigate to="/inventory" replace />} />
-          
-          {/* SEPARATED INVENTORY ROUTES */}
-          <Route path="/add-inventory" element={<Inventory viewMode="FORM_ONLY" />} />
-          <Route path="/inventory" element={<Inventory viewMode="TABLE_ONLY" />} />
-          
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/orders" element={<Orders />} />
+          {/* Base route acts strictly as the Login Page */}
+          <Route path="/" element={<Home onLogin={handleLogin} />} />
 
-          {/* Owner-Specific Routes */}
-          {userRole === 'OWNER' ? (
-            <>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/employees" element={<Employees />} />
-            </>
-          ) : (
-            <>
-              <Route path="/dashboard" element={<Navigate to="/inventory" replace />} />
-              <Route path="/expenses" element={<Navigate to="/inventory" replace />} />
-              <Route path="/employees" element={<Navigate to="/inventory" replace />} />
-            </>
-          )}
+          {/* Shared Protected Operations */}
+          <Route
+            path="/add-inventory"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER', 'ADMIN']}>
+                <Inventory viewMode="FORM_ONLY" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER', 'ADMIN']}>
+                <Inventory viewMode="TABLE_ONLY" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customers"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER', 'ADMIN']}>
+                <Customers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER', 'ADMIN']}>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Owner-Only Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER']}>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER']}>
+                <Expenses />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/employees"
+            element={
+              <ProtectedRoute userRole={userRole} allowedRoles={['OWNER']}>
+                <Employees />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch-all Fallback Route */}
+          <Route path="*" element={<Navigate to={userRole ? "/inventory" : "/"} replace />} />
         </Routes>
       </div>
     </Router>
