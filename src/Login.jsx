@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api'; // Ensure correct path to your axios instance
+import API from '../api'; // Ensure correct relative path to your axios instance
 
 function Login({ onLogin }) {
   const [credentials, setCredentials] = useState({ username: '', pin: '' });
@@ -16,10 +16,15 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      // Call backend Spring Boot auth endpoint
+      // Trim input values to prevent accidental whitespace mismatches
+      const cleanUsername = credentials.username.trim();
+      const cleanSecret = credentials.pin.trim();
+
+      // Pass both 'pin' and 'password' keys to match backend expected fields
       const response = await API.post('/api/auth/login', {
-        username: credentials.username,
-        pin: credentials.pin
+        username: cleanUsername,
+        pin: cleanSecret,
+        password: cleanSecret
       });
 
       const { role } = response.data;
@@ -35,7 +40,11 @@ function Login({ onLogin }) {
         navigate('/inventory');
       }
     } catch (err) {
-      setError(err.response?.data || 'Invalid username or password/PIN');
+      setError(
+        typeof err.response?.data === 'string'
+          ? err.response.data
+          : 'Invalid username or password/PIN'
+      );
     }
   };
 
