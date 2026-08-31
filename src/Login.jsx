@@ -11,7 +11,7 @@ const Login = ({ onLoginSuccess }) => {
 
     try {
       // Replace with your actual Render API backend URL
-      const response = await fetch('YOUR_RENDER_BACKEND_URL/api/auth/login', {
+      const response = await fetch('https://threethreadsbackend.onrender.com/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
