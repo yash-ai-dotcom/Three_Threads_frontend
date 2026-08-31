@@ -2,7 +2,7 @@ import { Navigate } from 'react-router-dom';
 
 function ProtectedRoute({ userRole, allowedRoles, children }) {
   if (!userRole) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(userRole)) {

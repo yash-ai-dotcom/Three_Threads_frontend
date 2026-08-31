@@ -8,12 +8,11 @@ import AdminNavbar from './AdminNavbar';
 import Inventory from './Inventory';
 import Home from './Home';
 import ProtectedRoute from './ProtectedRoute';
-import Employees from './Employees'; // Imported your full Employees component here
+import Employees from './Employees';
 
-// Remaining placeholder components
 const Dashboard = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">📊 Profit & Loss Overview</h2>
+    <h2 className="text-secondary fw-bold">📈 Profit & Loss Overview</h2>
     <p className="text-muted">High-level financial overview and revenue metrics.</p>
   </div>
 );
@@ -34,43 +33,43 @@ const Customers = () => (
 
 const Orders = () => (
   <div className="container py-4">
-    <h2 className="text-secondary fw-bold">🛒 Orders Details & Order Management</h2>
+    <h2 className="text-secondary fw-bold">📦 Orders Details & Order Management</h2>
     <p className="text-muted">Process store sales orders, dispatch statuses, and receipts.</p>
   </div>
 );
 
 function App() {
-  const [userRole, setUserRole] = useState(null); // Starts as unauthenticated (null)
+  // Initialize state from localStorage to maintain active session across refreshes
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('userRole') || null);
 
-  const handleLogin = (role) => {
+  const handleLogin = (userData) => {
+    const role = userData.role;
+    localStorage.setItem('userRole', role);
+    localStorage.setItem('username', userData.username);
     setUserRole(role);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('username');
     setUserRole(null);
   };
 
   return (
     <Router>
       <div>
-        {/* --- DEMO ROLE SWITCHER BANNER --- */}
-        <div className="bg-light border-bottom py-2 text-center">
-          <span className="me-2 text-muted small">Current Role: <strong>{userRole || 'Logged Out'}</strong></span>
-          <button className="btn btn-sm btn-outline-dark me-2" onClick={() => setUserRole('OWNER')}>Switch to Owner View</button>
-          <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => setUserRole('ADMIN')}>Switch to Admin View</button>
-          {userRole && <button className="btn btn-sm btn-danger" onClick={handleLogout}>Log Out</button>}
-        </div>
-
-        {/* --- DYNAMIC NAVBAR RENDERING --- */}
+        {/* Dynamic Navbar based strictly on active authenticated role */}
         {userRole === 'OWNER' && <OwnerNavbar onLogout={handleLogout} />}
         {userRole === 'ADMIN' && <AdminNavbar onLogout={handleLogout} />}
 
-        {/* --- PROTECTED ROUTE CONFIGURATION --- */}
         <Routes>
-          {/* Base route acts strictly as the Login Page */}
-          <Route path="/" element={<Home onLogin={handleLogin} />} />
+          {/* Base Route */}
+          <Route 
+            path="/" 
+            element={userRole ? <Navigate to="/inventory" replace /> : <Home onLogin={handleLogin} />} 
+          />
 
-          {/* Shared Protected Operations */}
+          {/* Shared Protected Routes */}
           <Route
             path="/add-inventory"
             element={
@@ -130,7 +129,7 @@ function App() {
             }
           />
 
-          {/* Catch-all Fallback Route */}
+          {/* Fallback Catch-all Route */}
           <Route path="*" element={<Navigate to={userRole ? "/inventory" : "/"} replace />} />
         </Routes>
       </div>
