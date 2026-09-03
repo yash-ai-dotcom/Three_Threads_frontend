@@ -34,10 +34,16 @@ function Home({ onLogin }) {
         throw new Error(errorMsg || 'Invalid username or PIN.');
       }
 
-      const data = await response.json(); // returns { role, username, fullName }
+      const data = await response.json(); // returns { role, username, fullName, token }
+
+      // 1. SAVE TOKEN TO LOCALSTORAGE (CRITICAL FOR API INTERCEPTOR)
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       onLogin(data);
 
-      // Automatic Redirect based on Role
+      // 2. Automatic Redirect based on Role
       if (data.role === 'OWNER') {
         navigate('/dashboard');
       } else {
