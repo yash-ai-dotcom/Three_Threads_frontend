@@ -9,6 +9,17 @@ const API = axios.create({
   },
 });
 
+// Interceptor to attach JWT token from localStorage to every outbound request
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
+
 // Authentication Endpoint
 export const loginUser = (credentials) => API.post('/api/auth/login', credentials);
 
