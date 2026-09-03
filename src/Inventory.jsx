@@ -227,9 +227,19 @@ function Inventory({ viewMode = 'ALL' }) {
                         {item.colors && item.colors.map((c, i) => (
                           <div key={i} className="small border-bottom py-1">
                             <span className="fw-bold text-primary">{c.colorName || 'Default'}:</span> {' '}
-                            Sets: {c.setTotal * c.sizeInSet} | Loose: S:{c.sizeS} M:{c.sizeM} L:{c.sizeL} XL:{c.sizeXL} XXL:{c.sizeXXL}
+                            Sets: {c.setTotal} | Loose: S:{c.sizeS} M:{c.sizeM} L:{c.sizeL} XL:{c.sizeXL} XXL:{c.sizeXXL}
                           </div>
                         ))}
+                        
+                        {/* TOTAL SETS SUMMARY ACROSS ALL COLORS */}
+                        {item.colors && item.colors.length > 0 && (
+                          <div className="pt-2 fw-bold text-dark small">
+                            Total Sets (All Colors): {' '}
+                            <span className="text-success">
+                              {item.colors.reduce((sum, c) => sum + (Number(c.setTotal) || 0), 0)}
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="fw-bold fs-5">{item.grandTotal}</td>
                       <td>
