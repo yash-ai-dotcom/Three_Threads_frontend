@@ -114,13 +114,13 @@ function Home({ onLogin }) {
                 <div className="col-6">
                   <div className="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-10">
                     <div className="text-secondary small mb-1">Efficiency Boost</div>
-                    <div className="fs-3 fw-bold text-success">+42%</div>
+                    <div className="fs-3 fw-bold text-success">+92.56%</div>
                   </div>
                 </div>
                 <div className="col-6">
                   <div className="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-10">
                     <div className="text-secondary small mb-1">Inventory Accuracy</div>
-                    <div className="fs-3 fw-bold text-info">99.8%</div>
+                    <div className="fs-3 fw-bold text-info">99.99%</div>
                   </div>
                 </div>
               </div>
