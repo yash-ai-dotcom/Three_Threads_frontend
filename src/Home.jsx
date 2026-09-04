@@ -67,7 +67,7 @@ function Home({ onLogin }) {
             <img 
               src="/threethreads.png" 
               alt="Three Threads Logo" 
-              style={{ height: '200px', objectFit: 'contain' }} 
+              style={{ height: '80px', objectFit: 'contain' }} 
             />
           </div>
           <button 
@@ -99,7 +99,7 @@ function Home({ onLogin }) {
                 fontFamily: 'system-ui, -apple-system, sans-serif' 
               }}
             >
-              Internal Inventory System
+              Internal Operations and Management Portal
             </span>
             <h1 className="display-4 fw-normal mb-4 text-dark lh-sm" style={{ letterSpacing: '-0.5px' }}>
               Crafted Quality, <br />
