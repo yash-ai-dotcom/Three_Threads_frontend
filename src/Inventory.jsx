@@ -41,7 +41,6 @@ function Inventory({ viewMode = 'ALL' }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle nested color array state
   const handleColorChange = (index, field, value) => {
     const updatedColors = [...formData.colors];
     updatedColors[index][field] = value;
@@ -104,7 +103,6 @@ function Inventory({ viewMode = 'ALL' }) {
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
-              {/* Primary Details Row */}
               <div className="row g-3 mb-3">
                 <div className="col-md-3">
                   <label className="form-label fw-semibold">Article No</label>
@@ -133,7 +131,6 @@ function Inventory({ viewMode = 'ALL' }) {
                 <input type="file" className="form-control" accept="image/*" onChange={handleImageChange} />
               </div>
 
-              {/* Color & Size Matrix */}
               <div className="bg-light p-3 rounded mb-4 border">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="h6 text-dark fw-bold mb-0">Color Breakdown & Loose Stock (Max 8 Colors)</h5>
@@ -158,7 +155,6 @@ function Inventory({ viewMode = 'ALL' }) {
                         <input type="number" className="form-control form-control-sm" value={colorItem.sizeInSet} onChange={(e) => handleColorChange(index, 'sizeInSet', e.target.value)} />
                       </div>
                       
-                      {/* Loose Sizes */}
                       {['S', 'M', 'L', 'XL', 'XXL'].map((sz) => (
                         <div className="col" key={sz}>
                           <label className="form-label text-muted small fw-bold">{sz}</label>
@@ -199,14 +195,13 @@ function Inventory({ viewMode = 'ALL' }) {
                   <th>Color Breakdown (Loose + Sets)</th>
                   <th>Grand Total Qty</th>
                   <th>Cost / Sell Price</th>
-                  <th>Profit</th>
                   <th className="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="text-center py-4 text-muted">No items found.</td>
+                    <td colSpan="7" className="text-center py-4 text-muted">No items found.</td>
                   </tr>
                 ) : (
                   items.map((item) => (
@@ -231,7 +226,6 @@ function Inventory({ viewMode = 'ALL' }) {
                           </div>
                         ))}
                         
-                        {/* TOTAL SETS SUMMARY ACROSS ALL COLORS */}
                         {item.colors && item.colors.length > 0 && (
                           <div className="pt-2 fw-bold text-dark small">
                             Total Sets (All Colors): {' '}
@@ -245,11 +239,6 @@ function Inventory({ viewMode = 'ALL' }) {
                       <td>
                         <div>Buy: ₹{item.costPerPiece}</div>
                         <div>Sell: ₹{item.sellingCostPerPiece}</div>
-                      </td>
-                      <td>
-                        <span className={`fw-bold ${item.profitMargin >= 0 ? 'text-success' : 'text-danger'}`}>
-                          ₹{item.profitMargin}
-                        </span>
                       </td>
                       <td className="text-center">
                         <button onClick={() => deleteInventory(item.id).then(fetchItems)} className="btn btn-outline-danger btn-sm">
