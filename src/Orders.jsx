@@ -208,7 +208,13 @@ function Orders() {
 
   const handleDownloadInvoice = async (orderId) => {
   try {
-    const token = localStorage.getItem('token'); // Retrieve stored JWT token
+    const token = localStorage.getItem('token'); // Ensure key matches LocalStorage
+    
+    if (!token) {
+      alert('No authentication token found. Please log in again.');
+      return;
+    }
+
     const response = await fetch(
       `https://threethreadsbackend.onrender.com/api/orders/${orderId}/pdf`,
       {
@@ -221,26 +227,25 @@ function Orders() {
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to download invoice (Status: ${response.status})`);
+      // Log status code to console for debugging
+      console.error(`HTTP Error Status: ${response.status}`);
+      throw new Error(`Server returned status: ${response.status}`);
     }
 
-    // Convert response to binary Blob object
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
 
-    // Create temporary invisible link to trigger browser download
     const link = document.createElement('a');
     link.href = blobUrl;
     link.download = `Invoice_Order_${orderId}.pdf`;
     document.body.appendChild(link);
     link.click();
 
-    // Clean up DOM and memory
     link.remove();
     window.URL.revokeObjectURL(blobUrl);
   } catch (error) {
     console.error('Invoice download failed:', error);
-    alert('Could not download invoice. Please verify your login session.');
+    alert(`Could not download invoice: ${error.message}`);
   }
 };
 
