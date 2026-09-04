@@ -6,7 +6,7 @@ function Orders() {
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
   
-  // Customer Details Form State
+  // Customer Details
   const [customerDetails, setCustomerDetails] = useState({
     customerName: '',
     customerPhone: '',
@@ -15,8 +15,9 @@ function Orders() {
     shippingAddress: ''
   });
 
+  // Order Items with Color-Specific Sets
   const [orderItems, setOrderItems] = useState([
-    { inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }
+    { inventoryId: '', articleNo: '', colorSelections: [], excludedSizes: [], pricePerPiece: 0 }
   ]);
 
   const availableSizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -44,29 +45,46 @@ function Orders() {
     const newItems = [...orderItems];
     
     if (selectedInv) {
+      // Default to first available color with 1 set
+      const defaultColors = selectedInv.colors[0] 
+        ? [{ colorName: selectedInv.colors[0].colorName, setsOrdered: 1 }] 
+        : [];
+
       newItems[index] = {
         ...newItems[index],
         inventoryId: selectedInv.id,
         articleNo: selectedInv.articleNo,
-        selectedColors: selectedInv.colors[0] ? [selectedInv.colors[0].colorName] : [],
+        colorSelections: defaultColors,
         pricePerPiece: selectedInv.sellingCostPerPiece || 0
       };
     }
     setOrderItems(newItems);
   };
 
+  // Toggle color selection
   const handleColorToggle = (itemIndex, colorName) => {
     const newItems = [...orderItems];
-    const currentColors = newItems[itemIndex].selectedColors;
+    const currentSelections = newItems[itemIndex].colorSelections;
+    const exists = currentSelections.find((c) => c.colorName === colorName);
 
-    if (currentColors.includes(colorName)) {
-      if (currentColors.length > 1) {
-        newItems[itemIndex].selectedColors = currentColors.filter((c) => c !== colorName);
+    if (exists) {
+      if (currentSelections.length > 1) {
+        newItems[itemIndex].colorSelections = currentSelections.filter((c) => c.colorName !== colorName);
       } else {
         alert('At least one color must be selected.');
       }
     } else {
-      newItems[itemIndex].selectedColors = [...currentColors, colorName];
+      newItems[itemIndex].colorSelections = [...currentSelections, { colorName, setsOrdered: 1 }];
+    }
+    setOrderItems(newItems);
+  };
+
+  // Change individual set count for a specific color
+  const handleColorSetsChange = (itemIndex, colorName, sets) => {
+    const newItems = [...orderItems];
+    const targetColor = newItems[itemIndex].colorSelections.find((c) => c.colorName === colorName);
+    if (targetColor) {
+      targetColor.setsOrdered = Math.max(1, Number(sets));
     }
     setOrderItems(newItems);
   };
@@ -84,7 +102,7 @@ function Orders() {
   };
 
   const addItemRow = () => {
-    setOrderItems([...orderItems, { inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
+    setOrderItems([...orderItems, { inventoryId: '', articleNo: '', colorSelections: [], excludedSizes: [], pricePerPiece: 0 }]);
   };
 
   const removeItemRow = (index) => {
@@ -98,26 +116,27 @@ function Orders() {
       
       const sizeInSet = selectedInv.colors?.[0]?.sizeInSet || 4;
       const piecesPerSet = Math.max(0, sizeInSet - item.excludedSizes.length);
-      const colorMultiplier = item.selectedColors.length;
       
-      return total + (item.setsOrdered * colorMultiplier * piecesPerSet * item.pricePerPiece);
+      const totalSetsInRow = item.colorSelections.reduce((sum, c) => sum + (c.setsOrdered || 0), 0);
+      return total + (totalSetsInRow * piecesPerSet * item.pricePerPiece);
     }, 0);
   };
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     
+    // Map individual color sets directly to backend payload items
     const flattenedItems = [];
     orderItems.forEach((item) => {
-      item.selectedColors.forEach((color) => {
+      item.colorSelections.forEach((colorObj) => {
         flattenedItems.push({
           inventoryId: item.inventoryId,
           articleNo: item.articleNo,
-          colorName: color,
-          setsOrdered: item.setsOrdered,
+          colorName: colorObj.colorName,
+          setsOrdered: colorObj.setsOrdered,
           excludedSizes: item.excludedSizes.join(','),
           pricePerPiece: item.pricePerPiece,
-          itemTotal: item.setsOrdered * item.pricePerPiece
+          itemTotal: colorObj.setsOrdered * item.pricePerPiece
         });
       });
     });
@@ -130,9 +149,9 @@ function Orders() {
 
     try {
       await createOrder(payload);
-      alert('Order Placed Successfully! Stock Auto-Adjusted.');
+      alert('Order Placed Successfully! Stock Auto-Adjusted per color sets.');
       setCustomerDetails({ customerName: '', customerPhone: '', customerEmail: '', receiverName: '', shippingAddress: '' });
-      setOrderItems([{ inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
+      setOrderItems([{ inventoryId: '', articleNo: '', colorSelections: [], excludedSizes: [], pricePerPiece: 0 }]);
       fetchData();
       setActiveTab('MANAGEMENT');
     } catch (err) {
@@ -179,7 +198,7 @@ function Orders() {
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmitOrder}>
-              {/* Customer & Shipping Information */}
+              {/* Customer Info */}
               <div className="row g-3 mb-4">
                 <div className="col-md-4">
                   <label className="form-label fw-bold">Customer / Store Name *</label>
@@ -199,16 +218,16 @@ function Orders() {
                 </div>
                 <div className="col-md-8">
                   <label className="form-label fw-bold">Shipping Address</label>
-                  <input type="text" className="form-control" name="shippingAddress" placeholder="Full street address, city, pincode..." value={customerDetails.shippingAddress} onChange={handleCustomerChange} />
+                  <input type="text" className="form-control" name="shippingAddress" placeholder="Full address..." value={customerDetails.shippingAddress} onChange={handleCustomerChange} />
                 </div>
               </div>
 
-              <h6 className="fw-bold mb-3">Order Items</h6>
+              <h6 className="fw-bold mb-3">Order Articles & Color Breakdowns</h6>
               {orderItems.map((item, idx) => {
                 const selectedInv = inventory.find((i) => i.id === Number(item.inventoryId));
                 return (
                   <div key={idx} className="card p-3 mb-3 bg-light border">
-                    <div className="row g-3 align-items-center">
+                    <div className="row g-3">
                       <div className="col-md-3">
                         <label className="form-label small fw-bold">Select Article</label>
                         <select className="form-select" value={item.inventoryId} onChange={(e) => handleArticleSelect(idx, e.target.value)} required>
@@ -219,37 +238,48 @@ function Orders() {
                         </select>
                       </div>
 
-                      <div className="col-md-3">
-                        <label className="form-label small fw-bold">Select Colors</label>
-                        <div>
-                          {selectedInv?.colors?.length > 0 ? (
-                            selectedInv.colors.map((c) => (
-                              <button
-                                key={c.id || c.colorName}
-                                type="button"
-                                className={`btn btn-sm me-1 mb-1 ${item.selectedColors.includes(c.colorName) ? 'btn-primary' : 'btn-outline-secondary'}`}
-                                onClick={() => handleColorToggle(idx, c.colorName)}
-                              >
-                                {c.colorName}
-                              </button>
-                            ))
-                          ) : (
-                            <small className="text-muted d-block mt-1">Select an article first</small>
-                          )}
-                        </div>
+                      {/* Dynamic Color Selection & Color-wise Sets */}
+                      <div className="col-md-5">
+                        <label className="form-label small fw-bold">Colors & Color-Wise Sets</label>
+                        {selectedInv?.colors?.length > 0 ? (
+                          <div className="d-flex flex-column gap-2">
+                            {selectedInv.colors.map((c) => {
+                              const activeColor = item.colorSelections.find((sel) => sel.colorName === c.colorName);
+                              const isSelected = !!activeColor;
+
+                              return (
+                                <div key={c.id || c.colorName} className="d-flex align-items-center gap-2">
+                                  <button
+                                    type="button"
+                                    className={`btn btn-sm ${isSelected ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                    style={{ width: '100px' }}
+                                    onClick={() => handleColorToggle(idx, c.colorName)}
+                                  >
+                                    {c.colorName}
+                                  </button>
+                                  {isSelected && (
+                                    <div className="input-group input-group-sm" style={{ width: '130px' }}>
+                                      <span className="input-group-text">Sets:</span>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        className="form-control"
+                                        value={activeColor.setsOrdered}
+                                        onChange={(e) => handleColorSetsChange(idx, c.colorName, e.target.value)}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <small className="text-muted d-block mt-1">Select an article first</small>
+                        )}
                       </div>
 
-                      <div className="col-md-2">
-                        <label className="form-label small fw-bold">Sets / Color</label>
-                        <input type="number" min="1" className="form-control" value={item.setsOrdered} onChange={(e) => {
-                          const updated = [...orderItems];
-                          updated[idx].setsOrdered = Number(e.target.value);
-                          setOrderItems(updated);
-                        }} />
-                      </div>
-
                       <div className="col-md-3">
-                        <label className="form-label small fw-bold text-danger">Exclude Sizes (Restocks)</label>
+                        <label className="form-label small fw-bold text-danger">Exclude Sizes (Restocks to Inv)</label>
                         <div>
                           {availableSizes.map((sz) => (
                             <button
@@ -266,7 +296,7 @@ function Orders() {
 
                       <div className="col-md-1 text-end">
                         {orderItems.length > 1 && (
-                          <button type="button" className="btn btn-outline-danger btn-sm mt-2" onClick={() => removeItemRow(idx)}>✕</button>
+                          <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeItemRow(idx)}>✕</button>
                         )}
                       </div>
                     </div>
@@ -294,7 +324,7 @@ function Orders() {
                 <tr>
                   <th>Invoice & Buyer</th>
                   <th>Shipping Details</th>
-                  <th>Ordered Items</th>
+                  <th>Ordered Items (Color-Wise Sets)</th>
                   <th>Total Price</th>
                   <th>Status</th>
                   <th className="text-center">Actions</th>
@@ -321,7 +351,7 @@ function Orders() {
                       <td>
                         {ord.items.map((it, i) => (
                           <div key={i} className="small border-bottom py-1">
-                            <span className="fw-bold text-primary">{it.articleNo}</span> ({it.colorName}) - {it.setsOrdered} Sets
+                            <span className="fw-bold text-primary">{it.articleNo}</span> - <span className="fw-bold">{it.colorName}</span>: {it.setsOrdered} Sets
                             {it.excludedSizes && (
                               <span className="badge bg-warning text-dark ms-2">
                                 Excluded: {it.excludedSizes}
