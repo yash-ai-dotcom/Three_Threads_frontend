@@ -207,9 +207,10 @@ function Orders() {
   };
 
   const handleDownloadInvoice = (orderId) => {
-    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080';
-    window.open(`${baseUrl}/api/orders/${orderId}/pdf`, '_blank');
-  };
+  // Replace with your actual deployed Render backend URL
+  const baseUrl = 'https://your-render-backend-app-name.onrender.com';
+  window.open(`${baseUrl}/api/orders/${orderId}/pdf`, '_blank');
+};
 
   return (
     <div className="container-fluid py-4">
