@@ -67,7 +67,7 @@ function Home({ onLogin }) {
             <img 
               src="/threethreads.png" 
               alt="Three Threads Logo" 
-              style={{ height: '42px', objectFit: 'contain' }} 
+              style={{ height: '200px', objectFit: 'contain' }} 
             />
           </div>
           <button 
