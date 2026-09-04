@@ -34,4 +34,10 @@ export const createInventory = (data) => API.post('/api/inventory', data);
 export const updateInventory = (id, data) => API.put(`/api/inventory/${id}`, data);
 export const deleteInventory = (id) => API.delete(`/api/inventory/${id}`);
 
+// Order Endpoints
+export const getOrders = () => API.get('/api/orders');
+export const createOrder = (orderData) => API.post('/api/orders', orderData);
+export const updateOrderStatus = (id, status) => API.put(`/api/orders/${id}/status`, { status });
+export const deleteOrder = (id) => API.delete(`/api/orders/${id}`);
+
 export default API;

@@ -9,6 +9,7 @@ import Inventory from './Inventory';
 import Home from './Home';
 import ProtectedRoute from './ProtectedRoute';
 import Employees from './Employees';
+import Orders from './Orders';
 
 const Dashboard = () => (
   <div className="container py-4">
@@ -28,13 +29,6 @@ const Customers = () => (
   <div className="container py-4">
     <h2 className="text-secondary fw-bold">👥 Customer Details & Tracking</h2>
     <p className="text-muted">Manage buyer records, contact info, and transaction histories.</p>
-  </div>
-);
-
-const Orders = () => (
-  <div className="container py-4">
-    <h2 className="text-secondary fw-bold">📦 Orders Details & Order Management</h2>
-    <p className="text-muted">Process store sales orders, dispatch statuses, and receipts.</p>
   </div>
 );
 
