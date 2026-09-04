@@ -6,7 +6,7 @@ function Orders() {
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
   
-  // Customer Details Form State
+  // Customer & Shipping Details
   const [customerDetails, setCustomerDetails] = useState({
     customerName: '',
     customerPhone: '',
@@ -15,13 +15,15 @@ function Orders() {
     shippingAddress: ''
   });
 
-  // Article Rows -> each row contains multiple Color Configurations
+  const initialLooseSizes = { sizeS: 0, sizeM: 0, sizeL: 0, sizeXL: 0, sizeXXL: 0 };
+
+  // Article Rows with Sets and Loose Pieces per Color
   const [orderItems, setOrderItems] = useState([
     {
       inventoryId: '',
       articleNo: '',
       pricePerPiece: 0,
-      colorConfigs: [] // Array of { colorName: '', setsOrdered: 1, excludedSizes: [] }
+      colorConfigs: [] // Array of { colorName: '', setsOrdered: 1, excludedSizes: [], ...initialLooseSizes }
     }
   ]);
 
@@ -55,13 +57,14 @@ function Orders() {
         inventoryId: selectedInv.id,
         articleNo: selectedInv.articleNo,
         pricePerPiece: selectedInv.sellingCostPerPiece || 0,
-        colorConfigs: defaultColor ? [{ colorName: defaultColor, setsOrdered: 1, excludedSizes: [] }] : []
+        colorConfigs: defaultColor 
+          ? [{ colorName: defaultColor, setsOrdered: 1, excludedSizes: [], ...initialLooseSizes }] 
+          : []
       };
     }
     setOrderItems(newItems);
   };
 
-  // Add a new color configuration row to an existing article
   const addColorConfig = (articleIdx) => {
     const selectedInv = inventory.find((i) => i.id === Number(orderItems[articleIdx].inventoryId));
     if (!selectedInv) return;
@@ -78,12 +81,12 @@ function Orders() {
     newItems[articleIdx].colorConfigs.push({
       colorName: availableColor.colorName,
       setsOrdered: 1,
-      excludedSizes: []
+      excludedSizes: [],
+      ...initialLooseSizes
     });
     setOrderItems(newItems);
   };
 
-  // Remove a specific color configuration block
   const removeColorConfig = (articleIdx, colorIdx) => {
     const newItems = [...orderItems];
     if (newItems[articleIdx].colorConfigs.length > 1) {
@@ -94,14 +97,13 @@ function Orders() {
     }
   };
 
-  // Update specific color row values (color selection or sets count)
   const updateColorConfig = (articleIdx, colorIdx, field, value) => {
     const newItems = [...orderItems];
-    newItems[articleIdx].colorConfigs[colorIdx][field] = field === 'setsOrdered' ? Math.max(1, Number(value)) : value;
+    const isNumberField = ['setsOrdered', 'sizeS', 'sizeM', 'sizeL', 'sizeXL', 'sizeXXL'].includes(field);
+    newItems[articleIdx].colorConfigs[colorIdx][field] = isNumberField ? Math.max(0, Number(value)) : value;
     setOrderItems(newItems);
   };
 
-  // Toggle excluded sizes for a SPECIFIC color variant
   const handleSizeToggle = (articleIdx, colorIdx, size) => {
     const newItems = [...orderItems];
     const currentExclusions = newItems[articleIdx].colorConfigs[colorIdx].excludedSizes;
@@ -122,6 +124,7 @@ function Orders() {
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
 
+  // Calculates Grand Total: (Sets Quantity + Loose Quantity) * Price Per Piece
   const calculateTotal = () => {
     return orderItems.reduce((total, article) => {
       const selectedInv = inventory.find((i) => i.id === Number(article.inventoryId));
@@ -131,7 +134,10 @@ function Orders() {
 
       const articleTotal = article.colorConfigs.reduce((subTotal, color) => {
         const piecesPerSet = Math.max(0, sizeInSet - color.excludedSizes.length);
-        return subTotal + (color.setsOrdered * piecesPerSet * article.pricePerPiece);
+        const setPieces = color.setsOrdered * piecesPerSet;
+        const loosePieces = (color.sizeS || 0) + (color.sizeM || 0) + (color.sizeL || 0) + (color.sizeXL || 0) + (color.sizeXXL || 0);
+        
+        return subTotal + ((setPieces + loosePieces) * article.pricePerPiece);
       }, 0);
 
       return total + articleTotal;
@@ -141,18 +147,31 @@ function Orders() {
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
     
-    // Flatten into individual backend order items
     const flattenedItems = [];
     orderItems.forEach((article) => {
+      const selectedInv = inventory.find((i) => i.id === Number(article.inventoryId));
+      const sizeInSet = selectedInv?.colors?.[0]?.sizeInSet || 4;
+
       article.colorConfigs.forEach((color) => {
+        const piecesPerSet = Math.max(0, sizeInSet - color.excludedSizes.length);
+        const totalSetPieces = color.setsOrdered * piecesPerSet;
+        const totalLoosePieces = (color.sizeS || 0) + (color.sizeM || 0) + (color.sizeL || 0) + (color.sizeXL || 0) + (color.sizeXXL || 0);
+        const totalPieces = totalSetPieces + totalLoosePieces;
+
         flattenedItems.push({
           inventoryId: article.inventoryId,
           articleNo: article.articleNo,
           colorName: color.colorName,
           setsOrdered: color.setsOrdered,
           excludedSizes: color.excludedSizes.join(','),
+          sizeS: color.sizeS || 0,
+          sizeM: color.sizeM || 0,
+          sizeL: color.sizeL || 0,
+          sizeXL: color.sizeXL || 0,
+          sizeXXL: color.sizeXXL || 0,
+          totalPiecesOrdered: totalPieces,
           pricePerPiece: article.pricePerPiece,
-          itemTotal: color.setsOrdered * article.pricePerPiece
+          itemTotal: totalPieces * article.pricePerPiece
         });
       });
     });
@@ -165,7 +184,7 @@ function Orders() {
 
     try {
       await createOrder(payload);
-      alert('Order Placed Successfully! Stock Auto-Adjusted.');
+      alert('Order Placed Successfully! Inventory adjusted for sets and loose pieces.');
       setCustomerDetails({ customerName: '', customerPhone: '', customerEmail: '', receiverName: '', shippingAddress: '' });
       setOrderItems([{ inventoryId: '', articleNo: '', pricePerPiece: 0, colorConfigs: [] }]);
       fetchData();
@@ -238,12 +257,12 @@ function Orders() {
                 </div>
               </div>
 
-              <h6 className="fw-bold mb-3">Order Articles & Color Configurations</h6>
+              <h6 className="fw-bold mb-3">Order Articles, Color Variants & Loose Pieces</h6>
               {orderItems.map((article, artIdx) => {
                 const selectedInv = inventory.find((i) => i.id === Number(article.inventoryId));
                 
                 return (
-                  <div key={artIdx} className="card p-3 mb-3 bg-light border">
+                  <div key={artIdx} className="card p-3 mb-3 bg-light border shadow-sm">
                     <div className="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
                       <div className="col-md-5">
                         <label className="form-label small fw-bold">Select Article *</label>
@@ -259,53 +278,69 @@ function Orders() {
                       )}
                     </div>
 
-                    {/* Color Configurations - Each color has its own Sets and Excluded Sizes */}
+                    {/* Color Row Matrix */}
                     {article.colorConfigs.map((color, colIdx) => (
-                      <div key={colIdx} className="row g-3 align-items-center mb-2 bg-white p-2 rounded border">
-                        <div className="col-md-3">
-                          <label className="form-label small fw-bold">Color Option</label>
-                          <select 
-                            className="form-select form-select-sm" 
-                            value={color.colorName} 
-                            onChange={(e) => updateColorConfig(artIdx, colIdx, 'colorName', e.target.value)}
-                          >
-                            {selectedInv?.colors?.map((c) => (
-                              <option key={c.id || c.colorName} value={c.colorName}>{c.colorName}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="col-md-2">
-                          <label className="form-label small fw-bold">Sets</label>
-                          <input 
-                            type="number" 
-                            min="1" 
-                            className="form-control form-control-sm" 
-                            value={color.setsOrdered} 
-                            onChange={(e) => updateColorConfig(artIdx, colIdx, 'setsOrdered', e.target.value)} 
-                          />
-                        </div>
-
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-danger">Exclude Sizes for {color.colorName}</label>
-                          <div>
-                            {availableSizes.map((sz) => (
-                              <button
-                                key={sz}
-                                type="button"
-                                className={`btn btn-sm me-1 mb-1 ${color.excludedSizes.includes(sz) ? 'btn-danger' : 'btn-outline-secondary'}`}
-                                onClick={() => handleSizeToggle(artIdx, colIdx, sz)}
-                              >
-                                {color.excludedSizes.includes(sz) ? `No ${sz}` : sz}
-                              </button>
-                            ))}
+                      <div key={colIdx} className="card p-3 mb-2 bg-white border">
+                        <div className="row g-2 align-items-center">
+                          <div className="col-md-2">
+                            <label className="form-label small fw-bold text-muted">Color Option</label>
+                            <select 
+                              className="form-select form-select-sm" 
+                              value={color.colorName} 
+                              onChange={(e) => updateColorConfig(artIdx, colIdx, 'colorName', e.target.value)}
+                            >
+                              {selectedInv?.colors?.map((c) => (
+                                <option key={c.id || c.colorName} value={c.colorName}>{c.colorName}</option>
+                              ))}
+                            </select>
                           </div>
-                        </div>
 
-                        <div className="col-md-1 text-end">
-                          {article.colorConfigs.length > 1 && (
-                            <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeColorConfig(artIdx, colIdx)}>✕</button>
-                          )}
+                          <div className="col-md-1">
+                            <label className="form-label small fw-bold text-muted">Sets</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              className="form-control form-control-sm" 
+                              value={color.setsOrdered} 
+                              onChange={(e) => updateColorConfig(artIdx, colIdx, 'setsOrdered', e.target.value)} 
+                            />
+                          </div>
+
+                          {/* Loose Pieces Inputs */}
+                          {['S', 'M', 'L', 'XL', 'XXL'].map((sz) => (
+                            <div className="col" key={sz}>
+                              <label className="form-label small fw-bold text-muted">Loose {sz}</label>
+                              <input 
+                                type="number" 
+                                min="0" 
+                                className="form-control form-control-sm" 
+                                value={color[`size${sz}`]} 
+                                onChange={(e) => updateColorConfig(artIdx, colIdx, `size${sz}`, e.target.value)} 
+                              />
+                            </div>
+                          ))}
+
+                          <div className="col-md-3">
+                            <label className="form-label small fw-bold text-danger">Exclude Set Sizes</label>
+                            <div>
+                              {availableSizes.map((sz) => (
+                                <button
+                                  key={sz}
+                                  type="button"
+                                  className={`btn btn-sm me-1 mb-1 ${color.excludedSizes.includes(sz) ? 'btn-danger' : 'btn-outline-secondary'}`}
+                                  onClick={() => handleSizeToggle(artIdx, colIdx, sz)}
+                                >
+                                  {color.excludedSizes.includes(sz) ? `No ${sz}` : sz}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="col-md-1 text-end">
+                            {article.colorConfigs.length > 1 && (
+                              <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => removeColorConfig(artIdx, colIdx)}>✕</button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -341,7 +376,7 @@ function Orders() {
                 <tr>
                   <th>Invoice & Buyer</th>
                   <th>Shipping Details</th>
-                  <th>Ordered Items & Exclusions</th>
+                  <th>Ordered Breakdown (Sets + Loose)</th>
                   <th>Total Price</th>
                   <th>Status</th>
                   <th className="text-center">Actions</th>
@@ -368,10 +403,14 @@ function Orders() {
                       <td>
                         {ord.items.map((it, i) => (
                           <div key={i} className="small border-bottom py-1">
-                            <span className="fw-bold text-primary">{it.articleNo}</span> - <span className="fw-bold">{it.colorName}</span> ({it.setsOrdered} Sets)
+                            <span className="fw-bold text-primary">{it.articleNo}</span> - <span className="fw-bold">{it.colorName}</span>:
+                            <span className="ms-1">Sets: {it.setsOrdered}</span>
+                            <span className="ms-2 text-secondary">
+                              (Loose: S:{it.sizeS || 0} M:{it.sizeM || 0} L:{it.sizeL || 0} XL:{it.sizeXL || 0} XXL:{it.sizeXXL || 0})
+                            </span>
                             {it.excludedSizes && (
                               <span className="badge bg-warning text-dark ms-2">
-                                Excluded: {it.excludedSizes}
+                                Excluded Set Sizes: {it.excludedSizes}
                               </span>
                             )}
                           </div>
