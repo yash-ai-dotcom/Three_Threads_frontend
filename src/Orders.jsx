@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { getInventoryList, getOrders, createOrder, updateOrderStatus, deleteOrder } from './api';
 
 function Orders() {
-  const [activeTab, setActiveTab] = useState('MANAGEMENT'); // 'FORM' or 'MANAGEMENT'
+  const [activeTab, setActiveTab] = useState('MANAGEMENT');
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
   
-  // Form State
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  // Customer Details Form State
+  const [customerDetails, setCustomerDetails] = useState({
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    receiverName: '',
+    shippingAddress: ''
+  });
+
   const [orderItems, setOrderItems] = useState([
-    { inventoryId: '', articleNo: '', colorName: '', setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }
+    { inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }
   ]);
 
   const availableSizes = ['S', 'M', 'L', 'XL', 'XXL'];
@@ -29,6 +35,10 @@ function Orders() {
     }
   };
 
+  const handleCustomerChange = (e) => {
+    setCustomerDetails({ ...customerDetails, [e.target.name]: e.target.value });
+  };
+
   const handleArticleSelect = (index, invId) => {
     const selectedInv = inventory.find((item) => item.id === Number(invId));
     const newItems = [...orderItems];
@@ -38,9 +48,25 @@ function Orders() {
         ...newItems[index],
         inventoryId: selectedInv.id,
         articleNo: selectedInv.articleNo,
-        colorName: selectedInv.colors[0]?.colorName || '',
+        selectedColors: selectedInv.colors[0] ? [selectedInv.colors[0].colorName] : [],
         pricePerPiece: selectedInv.sellingCostPerPiece || 0
       };
+    }
+    setOrderItems(newItems);
+  };
+
+  const handleColorToggle = (itemIndex, colorName) => {
+    const newItems = [...orderItems];
+    const currentColors = newItems[itemIndex].selectedColors;
+
+    if (currentColors.includes(colorName)) {
+      if (currentColors.length > 1) {
+        newItems[itemIndex].selectedColors = currentColors.filter((c) => c !== colorName);
+      } else {
+        alert('At least one color must be selected.');
+      }
+    } else {
+      newItems[itemIndex].selectedColors = [...currentColors, colorName];
     }
     setOrderItems(newItems);
   };
@@ -58,7 +84,7 @@ function Orders() {
   };
 
   const addItemRow = () => {
-    setOrderItems([...orderItems, { inventoryId: '', articleNo: '', colorName: '', setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
+    setOrderItems([...orderItems, { inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
   };
 
   const removeItemRow = (index) => {
@@ -68,31 +94,45 @@ function Orders() {
   const calculateTotal = () => {
     return orderItems.reduce((total, item) => {
       const selectedInv = inventory.find((i) => i.id === Number(item.inventoryId));
-      const sizeInSet = selectedInv?.colors?.find((c) => c.colorName === item.colorName)?.sizeInSet || 4;
+      if (!selectedInv) return total;
+      
+      const sizeInSet = selectedInv.colors?.[0]?.sizeInSet || 4;
       const piecesPerSet = Math.max(0, sizeInSet - item.excludedSizes.length);
-      return total + (item.setsOrdered * piecesPerSet * item.pricePerPiece);
+      const colorMultiplier = item.selectedColors.length;
+      
+      return total + (item.setsOrdered * colorMultiplier * piecesPerSet * item.pricePerPiece);
     }, 0);
   };
 
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
+    
+    const flattenedItems = [];
+    orderItems.forEach((item) => {
+      item.selectedColors.forEach((color) => {
+        flattenedItems.push({
+          inventoryId: item.inventoryId,
+          articleNo: item.articleNo,
+          colorName: color,
+          setsOrdered: item.setsOrdered,
+          excludedSizes: item.excludedSizes.join(','),
+          pricePerPiece: item.pricePerPiece,
+          itemTotal: item.setsOrdered * item.pricePerPiece
+        });
+      });
+    });
+
     const payload = {
-      customerName,
-      customerPhone,
+      ...customerDetails,
       totalAmount: calculateTotal(),
-      items: orderItems.map((item) => ({
-        ...item,
-        excludedSizes: item.excludedSizes.join(','),
-        itemTotal: item.setsOrdered * item.pricePerPiece
-      }))
+      items: flattenedItems
     };
 
     try {
       await createOrder(payload);
       alert('Order Placed Successfully! Stock Auto-Adjusted.');
-      setCustomerName('');
-      setCustomerPhone('');
-      setOrderItems([{ inventoryId: '', articleNo: '', colorName: '', setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
+      setCustomerDetails({ customerName: '', customerPhone: '', customerEmail: '', receiverName: '', shippingAddress: '' });
+      setOrderItems([{ inventoryId: '', articleNo: '', selectedColors: [], setsOrdered: 1, excludedSizes: [], pricePerPiece: 0 }]);
       fetchData();
       setActiveTab('MANAGEMENT');
     } catch (err) {
@@ -114,7 +154,6 @@ function Orders() {
 
   return (
     <div className="container-fluid py-4">
-      {/* Navigation Header */}
       <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
         <h2 className="fw-bold text-primary">🛒 Order Operations</h2>
         <div className="btn-group">
@@ -133,7 +172,6 @@ function Orders() {
         </div>
       </div>
 
-      {/* 1. TAKE ORDER FORM */}
       {activeTab === 'FORM' && (
         <div className="card shadow-sm border-0">
           <div className="card-header bg-dark text-white">
@@ -141,14 +179,27 @@ function Orders() {
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmitOrder}>
+              {/* Customer & Shipping Information */}
               <div className="row g-3 mb-4">
-                <div className="col-md-6">
-                  <label className="form-label fw-bold">Customer / Store Name</label>
-                  <input type="text" className="form-control" value={customerName} onChange={(e) => setCustomerName(e.target.value)} required />
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Customer / Store Name *</label>
+                  <input type="text" className="form-control" name="customerName" value={customerDetails.customerName} onChange={handleCustomerChange} required />
                 </div>
-                <div className="col-md-6">
-                  <label className="form-label fw-bold">Phone Number</label>
-                  <input type="text" className="form-control" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} required />
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Phone Number *</label>
+                  <input type="text" className="form-control" name="customerPhone" value={customerDetails.customerPhone} onChange={handleCustomerChange} required />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Email Address *</label>
+                  <input type="email" className="form-control" name="customerEmail" value={customerDetails.customerEmail} onChange={handleCustomerChange} required />
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label fw-bold">Receiver Name (Optional)</label>
+                  <input type="text" className="form-control" name="receiverName" placeholder="Same as Customer if blank" value={customerDetails.receiverName} onChange={handleCustomerChange} />
+                </div>
+                <div className="col-md-8">
+                  <label className="form-label fw-bold">Shipping Address</label>
+                  <input type="text" className="form-control" name="shippingAddress" placeholder="Full street address, city, pincode..." value={customerDetails.shippingAddress} onChange={handleCustomerChange} />
                 </div>
               </div>
 
@@ -168,21 +219,28 @@ function Orders() {
                         </select>
                       </div>
 
-                      <div className="col-md-2">
-                        <label className="form-label small fw-bold">Color Variant</label>
-                        <select className="form-select" value={item.colorName} onChange={(e) => {
-                          const updated = [...orderItems];
-                          updated[idx].colorName = e.target.value;
-                          setOrderItems(updated);
-                        }}>
-                          {selectedInv?.colors?.map((c, i) => (
-                            <option key={i} value={c.colorName}>{c.colorName}</option>
-                          ))}
-                        </select>
+                      <div className="col-md-3">
+                        <label className="form-label small fw-bold">Select Colors</label>
+                        <div>
+                          {selectedInv?.colors?.length > 0 ? (
+                            selectedInv.colors.map((c) => (
+                              <button
+                                key={c.id || c.colorName}
+                                type="button"
+                                className={`btn btn-sm me-1 mb-1 ${item.selectedColors.includes(c.colorName) ? 'btn-primary' : 'btn-outline-secondary'}`}
+                                onClick={() => handleColorToggle(idx, c.colorName)}
+                              >
+                                {c.colorName}
+                              </button>
+                            ))
+                          ) : (
+                            <small className="text-muted d-block mt-1">Select an article first</small>
+                          )}
+                        </div>
                       </div>
 
                       <div className="col-md-2">
-                        <label className="form-label small fw-bold">Sets Count</label>
+                        <label className="form-label small fw-bold">Sets / Color</label>
                         <input type="number" min="1" className="form-control" value={item.setsOrdered} onChange={(e) => {
                           const updated = [...orderItems];
                           updated[idx].setsOrdered = Number(e.target.value);
@@ -190,14 +248,14 @@ function Orders() {
                         }} />
                       </div>
 
-                      <div className="col-md-4">
-                        <label className="form-label small fw-bold text-danger">Exclude Sizes (Restocks to Inventory)</label>
+                      <div className="col-md-3">
+                        <label className="form-label small fw-bold text-danger">Exclude Sizes (Restocks)</label>
                         <div>
                           {availableSizes.map((sz) => (
                             <button
                               key={sz}
                               type="button"
-                              className={`btn btn-sm me-1 ${item.excludedSizes.includes(sz) ? 'btn-danger' : 'btn-outline-secondary'}`}
+                              className={`btn btn-sm me-1 mb-1 ${item.excludedSizes.includes(sz) ? 'btn-danger' : 'btn-outline-secondary'}`}
                               onClick={() => handleSizeToggle(idx, sz)}
                             >
                               {item.excludedSizes.includes(sz) ? `No ${sz}` : sz}
@@ -208,7 +266,7 @@ function Orders() {
 
                       <div className="col-md-1 text-end">
                         {orderItems.length > 1 && (
-                          <button type="button" className="btn btn-outline-danger btn-sm mt-4" onClick={() => removeItemRow(idx)}>✕</button>
+                          <button type="button" className="btn btn-outline-danger btn-sm mt-2" onClick={() => removeItemRow(idx)}>✕</button>
                         )}
                       </div>
                     </div>
@@ -217,7 +275,7 @@ function Orders() {
               })}
 
               <div className="d-flex justify-content-between align-items-center mt-3">
-                <button type="button" className="btn btn-outline-secondary" onClick={addItemRow}>+ Add Another Item</button>
+                <button type="button" className="btn btn-outline-secondary" onClick={addItemRow}>+ Add Another Article Row</button>
                 <div className="text-end">
                   <h4 className="fw-bold text-success mb-2">Grand Total: ₹{calculateTotal().toFixed(2)}</h4>
                   <button type="submit" className="btn btn-success btn-lg px-5">Submit Order</button>
@@ -228,16 +286,15 @@ function Orders() {
         </div>
       )}
 
-      {/* 2. ORDER MANAGEMENT TABLE */}
       {activeTab === 'MANAGEMENT' && (
         <div className="card shadow-sm border-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
               <thead className="table-dark">
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer Info</th>
-                  <th>Ordered Articles & Exclusions</th>
+                  <th>Invoice & Buyer</th>
+                  <th>Shipping Details</th>
+                  <th>Ordered Items</th>
                   <th>Total Price</th>
                   <th>Status</th>
                   <th className="text-center">Actions</th>
@@ -251,10 +308,15 @@ function Orders() {
                 ) : (
                   orders.map((ord) => (
                     <tr key={ord.id}>
-                      <td className="fw-bold">#ORD-{ord.id}</td>
                       <td>
+                        <span className="badge bg-secondary mb-1">{ord.invoiceNo}</span>
                         <div className="fw-bold">{ord.customerName}</div>
-                        <small className="text-muted">{ord.customerPhone}</small>
+                        <small className="text-muted d-block">{ord.customerPhone}</small>
+                        <small className="text-muted d-block">{ord.customerEmail}</small>
+                      </td>
+                      <td>
+                        <div className="fw-semibold">{ord.receiverName || ord.customerName}</div>
+                        <small className="text-muted">{ord.shippingAddress || 'N/A'}</small>
                       </td>
                       <td>
                         {ord.items.map((it, i) => (
