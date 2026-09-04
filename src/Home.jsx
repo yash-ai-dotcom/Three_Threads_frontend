@@ -65,7 +65,7 @@ function Home({ onLogin }) {
           <div className="d-flex align-items-center gap-3">
             {/* Replace src path with your relative path to the logo file */}
             <img 
-              src="/threethreadsimg.png" 
+              src="/threethreads.png" 
               alt="Three Threads Logo" 
               style={{ height: '42px', objectFit: 'contain' }} 
             />
