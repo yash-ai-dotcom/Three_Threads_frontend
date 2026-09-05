@@ -42,29 +42,38 @@ export default function Dashboard() {
         <button onClick={fetchMetrics} className="btn btn-outline-dark btn-sm fw-bold">🔄 Refresh Metrics</button>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards Row */}
       <div className="row g-3 mb-4">
-        {/* Stock Valuation Card */}
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm bg-dark text-white p-3">
-            <small className="text-uppercase fw-bold text-muted">Total Stock Valuation (Buy Cost)</small>
+        {/* Stock Buy Cost Card */}
+        <div className="col-md-6 col-lg">
+          <div className="card border-0 shadow-sm bg-dark text-white p-3 h-100">
+            <small className="text-uppercase fw-bold text-muted">Total Stock Valuation (Buy)</small>
             <h3 className="fw-bold text-warning mb-1">₹{metrics.totalStockCostValuation?.toLocaleString('en-IN')}</h3>
             <small className="text-light">{metrics.totalStockPieces} total pieces in warehouse</small>
           </div>
         </div>
 
+        {/* Potential Sell Valuation Card */}
+        <div className="col-md-6 col-lg">
+          <div className="card border-0 shadow-sm bg-success text-white p-3 h-100">
+            <small className="text-uppercase fw-bold text-white-50">Potential Sell Valuation</small>
+            <h3 className="fw-bold mb-1">₹{metrics.totalStockSellingValuation?.toLocaleString('en-IN')}</h3>
+            <small className="text-white-50">Estimated value if all stock is sold</small>
+          </div>
+        </div>
+
         {/* Total Revenue Card */}
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm bg-primary text-white p-3">
+        <div className="col-md-6 col-lg">
+          <div className="card border-0 shadow-sm bg-primary text-white p-3 h-100">
             <small className="text-uppercase fw-bold text-white-50">Gross Revenue Collected</small>
             <h3 className="fw-bold mb-1">₹{metrics.totalRevenue?.toLocaleString('en-IN')}</h3>
-            <small>{metrics.totalUnitsSold} items sold across {metrics.totalOrdersPlaced} orders</small>
+            <small>{metrics.totalUnitsSold} items sold ({metrics.totalOrdersPlaced} orders)</small>
           </div>
         </div>
 
         {/* Operational Expenses Card */}
-        <div className="col-md-3">
-          <div className="card border-0 shadow-sm bg-danger text-white p-3">
+        <div className="col-md-6 col-lg">
+          <div className="card border-0 shadow-sm bg-danger text-white p-3 h-100">
             <small className="text-uppercase fw-bold text-white-50">Operational Expenses</small>
             <h3 className="fw-bold mb-1">₹{metrics.totalOperationalExpenses?.toLocaleString('en-IN')}</h3>
             <small>Utilities, Rent, Payroll & Freight</small>
@@ -72,8 +81,8 @@ export default function Dashboard() {
         </div>
 
         {/* Net Profit Card */}
-        <div className="col-md-3">
-          <div className={`card border-0 shadow-sm p-3 text-white ${metrics.netProfitOrLoss >= 0 ? 'bg-success' : 'bg-danger'}`}>
+        <div className="col-md-12 col-lg">
+          <div className={`card border-0 shadow-sm p-3 text-white h-100 ${metrics.netProfitOrLoss >= 0 ? 'bg-info' : 'bg-secondary'}`}>
             <small className="text-uppercase fw-bold text-white-50">Net P&L (Revenue - OpEx)</small>
             <h3 className="fw-bold mb-1">₹{metrics.netProfitOrLoss?.toLocaleString('en-IN')}</h3>
             <small>{metrics.netProfitOrLoss >= 0 ? 'Positive Operating Margin' : 'Operating at a Loss'}</small>
