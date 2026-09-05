@@ -46,4 +46,7 @@ export const createExpense = (expenseData) => API.post('/api/expenses', expenseD
 export const updateExpense = (id, expenseData) => API.put(`/api/expenses/${id}`, expenseData);
 export const deleteExpense = (id) => API.delete(`/api/expenses/${id}`);
 
+// Dashboard Endpoints
+export const getDashboardMetrics = () => API.get('/api/dashboard/metrics');
+
 export default API;

@@ -19,7 +19,7 @@ function OwnerNavbar({ onLogout }) {
         <div className="collapse navbar-collapse" id="ownerNavbarNav">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <Link className={`nav-link ${isActive('/dashboard')}`} to="/dashboard">📊 Profit & Loss</Link>
+              <Link className={`nav-link ${isActive('/dashboard')}`} to="/dashboard">📊 Performance Dashboard</Link>
             </li>
             <li className="nav-item">
               <Link className={`nav-link ${isActive('/expenses')}`} to="/expenses">💸 Expense Tracker</Link>

@@ -11,20 +11,9 @@ import ProtectedRoute from './ProtectedRoute';
 import Employees from './Employees';
 import Orders from './Orders';
 import Expenses from './Expenses'; // Replaces inline Expenses placeholder component
+import Dashboard from './Dashboard';
 
-const Dashboard = () => (
-  <div className="container py-4">
-    <h2 className="text-secondary fw-bold">📈 Profit & Loss Overview</h2>
-    <p className="text-muted">High-level financial overview and revenue metrics.</p>
-  </div>
-);
 
-// const Expenses = () => (
-//   <div className="container py-4">
-//     <h2 className="text-secondary fw-bold">💸 Expense Tracker</h2>
-//     <p className="text-muted">Log and track daily shop operational expenses.</p>
-//   </div>
-// );
 
 const Customers = () => (
   <div className="container py-4">
