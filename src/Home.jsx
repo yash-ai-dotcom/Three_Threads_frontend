@@ -70,6 +70,7 @@ function Home({ onLogin }) {
               style={{ height: '80px', objectFit: 'contain' }} 
             />
           </div>
+          
           <button 
             className="btn rounded-0 px-4 py-2 fw-semibold tracking-wide text-uppercase"
             style={{ 

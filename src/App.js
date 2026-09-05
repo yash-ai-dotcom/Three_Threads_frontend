@@ -10,6 +10,7 @@ import Home from './Home';
 import ProtectedRoute from './ProtectedRoute';
 import Employees from './Employees';
 import Orders from './Orders';
+import Expenses from './Expenses'; // Replaces inline Expenses placeholder component
 
 const Dashboard = () => (
   <div className="container py-4">

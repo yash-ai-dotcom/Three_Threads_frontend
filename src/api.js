@@ -40,4 +40,10 @@ export const createOrder = (orderData) => API.post('/api/orders', orderData);
 export const updateOrderStatus = (id, status) => API.put(`/api/orders/${id}/status`, { status });
 export const deleteOrder = (id) => API.delete(`/api/orders/${id}`);
 
+// Expense Endpoints
+export const getExpenses = () => API.get('/api/expenses');
+export const createExpense = (expenseData) => API.post('/api/expenses', expenseData);
+export const updateExpense = (id, expenseData) => API.put(`/api/expenses/${id}`, expenseData);
+export const deleteExpense = (id) => API.delete(`/api/expenses/${id}`);
+
 export default API;
