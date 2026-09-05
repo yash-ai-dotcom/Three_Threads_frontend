@@ -33,6 +33,10 @@ function OwnerNavbar({ onLogout }) {
             <li className="nav-item">
               <Link className={`nav-link ${isActive('/customers')}`} to="/customers">👥 Customer Details</Link>
             </li>
+            {/* ✅ ADDED ORDER MANAGEMENT LINK */}
+            <li className="nav-item">
+              <Link className={`nav-link ${isActive('/orders')}`} to="/orders">🛒 Order Management</Link>
+            </li>
             <li className="nav-item">
               <Link className={`nav-link ${isActive('/employees')}`} to="/employees">👔 Employee Management</Link>
             </li>
