@@ -10,17 +10,9 @@ import Home from './Home';
 import ProtectedRoute from './ProtectedRoute';
 import Employees from './Employees';
 import Orders from './Orders';
-import Expenses from './Expenses'; // Replaces inline Expenses placeholder component
+import Expenses from './Expenses'; 
 import Dashboard from './Dashboard';
-
-
-
-const Customers = () => (
-  <div className="container py-4">
-    <h2 className="text-secondary fw-bold">👥 Customer Details & Tracking</h2>
-    <p className="text-muted">Manage buyer records, contact info, and transaction histories.</p>
-  </div>
-);
+import Customer from './Customer';
 
 function App() {
   // Initialize state from localStorage to maintain active session across refreshes
@@ -74,7 +66,7 @@ function App() {
             path="/customers"
             element={
               <ProtectedRoute userRole={userRole} allowedRoles={['OWNER', 'ADMIN']}>
-                <Customers />
+                <Customer />
               </ProtectedRoute>
             }
           />

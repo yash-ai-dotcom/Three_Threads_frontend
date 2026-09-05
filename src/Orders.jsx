@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getInventoryList, getOrders, createOrder, updateOrderStatus, deleteOrder } from './api';
+import { getInventoryList, getOrders, createOrder, updateOrderStatus, deleteOrder, getCustomers } from './api';
 
 function Orders() {
   const [activeTab, setActiveTab] = useState('MANAGEMENT');
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
   
   // Customer & Shipping Details
   const [customerDetails, setCustomerDetails] = useState({
@@ -35,9 +36,14 @@ function Orders() {
 
   const fetchData = async () => {
     try {
-      const [invRes, ordRes] = await Promise.all([getInventoryList(), getOrders()]);
+      const [invRes, ordRes, custRes] = await Promise.all([
+        getInventoryList(), 
+        getOrders(),
+        getCustomers()
+      ]);
       setInventory(invRes.data);
       setOrders(ordRes.data);
+      setCustomers(custRes.data);
     } catch (err) {
       console.error('Failed to load order data:', err);
     }
@@ -45,6 +51,19 @@ function Orders() {
 
   const handleCustomerChange = (e) => {
     setCustomerDetails({ ...customerDetails, [e.target.name]: e.target.value });
+  };
+
+  const handleSelectExistingCustomer = (customerId) => {
+    const selected = customers.find((c) => c.id === Number(customerId));
+    if (selected) {
+      setCustomerDetails({
+        customerName: selected.customerName,
+        customerPhone: selected.phoneNo,
+        customerEmail: selected.email || '',
+        receiverName: selected.shopName || selected.customerName,
+        shippingAddress: selected.address || ''
+      });
+    }
   };
 
   const handleArticleSelect = (articleIdx, invId) => {
@@ -207,47 +226,46 @@ function Orders() {
   };
 
   const handleDownloadInvoice = async (orderId) => {
-  try {
-    const token = localStorage.getItem('token'); // Ensure key matches LocalStorage
-    
-    if (!token) {
-      alert('No authentication token found. Please log in again.');
-      return;
-    }
-
-    const response = await fetch(
-      `https://threethreadsbackend.onrender.com/api/orders/${orderId}/pdf`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/pdf',
-        },
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        alert('No authentication token found. Please log in again.');
+        return;
       }
-    );
 
-    if (!response.ok) {
-      // Log status code to console for debugging
-      console.error(`HTTP Error Status: ${response.status}`);
-      throw new Error(`Server returned status: ${response.status}`);
+      const response = await fetch(
+        `https://threethreadsbackend.onrender.com/api/orders/${orderId}/pdf`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/pdf',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error(`HTTP Error Status: ${response.status}`);
+        throw new Error(`Server returned status: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `Invoice_Order_${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error('Invoice download failed:', error);
+      alert(`Could not download invoice: ${error.message}`);
     }
-
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = `Invoice_Order_${orderId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-
-    link.remove();
-    window.URL.revokeObjectURL(blobUrl);
-  } catch (error) {
-    console.error('Invoice download failed:', error);
-    alert(`Could not download invoice: ${error.message}`);
-  }
-};
+  };
 
   return (
     <div className="container-fluid py-4">
@@ -276,6 +294,25 @@ function Orders() {
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmitOrder}>
+              
+              {/* Quick Select Registered Customer */}
+              <div className="row mb-3">
+                <div className="col-12">
+                  <label className="form-label fw-bold text-primary">⚡ Quick Select Registered Customer</label>
+                  <select 
+                    className="form-select border-primary" 
+                    onChange={(e) => handleSelectExistingCustomer(e.target.value)}
+                  >
+                    <option value="">-- Choose Existing Customer or Fill Details Manually --</option>
+                    {customers.map((cust) => (
+                      <option key={cust.id} value={cust.id}>
+                        {cust.customerNo} - {cust.customerName} ({cust.shopName ? cust.shopName : 'No Shop'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               {/* Customer Info */}
               <div className="row g-3 mb-4">
                 <div className="col-md-4">

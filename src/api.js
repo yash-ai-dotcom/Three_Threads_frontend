@@ -49,4 +49,9 @@ export const deleteExpense = (id) => API.delete(`/api/expenses/${id}`);
 // Dashboard Endpoints
 export const getDashboardMetrics = () => API.get('/api/dashboard/metrics');
 
+// Customer Endpoints
+export const getCustomers = () => API.get('/api/customers');
+export const createCustomer = (customerData) => API.post('/api/customers', customerData);
+export const deleteCustomer = (id) => API.delete(`/api/customers/${id}`);
+
 export default API;
