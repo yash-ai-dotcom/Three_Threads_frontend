@@ -19,12 +19,12 @@ const Dashboard = () => (
   </div>
 );
 
-const Expenses = () => (
-  <div className="container py-4">
-    <h2 className="text-secondary fw-bold">💸 Expense Tracker</h2>
-    <p className="text-muted">Log and track daily shop operational expenses.</p>
-  </div>
-);
+// const Expenses = () => (
+//   <div className="container py-4">
+//     <h2 className="text-secondary fw-bold">💸 Expense Tracker</h2>
+//     <p className="text-muted">Log and track daily shop operational expenses.</p>
+//   </div>
+// );
 
 const Customers = () => (
   <div className="container py-4">
